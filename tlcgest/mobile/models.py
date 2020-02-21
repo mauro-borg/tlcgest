@@ -5,17 +5,21 @@ from django.db import models
 class MobileUser(models.Model):
     userid = models.CharField(max_length=20, primary_key=True)
     last_name = models.CharField(max_length=50)
-    first_name = models.CharField(max_length=50)
-    email = models.CharField(max_length=80)
-    cod_fis = models.CharField(max_length=16)
+    first_name = models.CharField(max_length=50, blank=True, null=True)
+    email = models.CharField(max_length=80, blank=True, null=True)
+    cod_fis = models.CharField(max_length=16, blank=True, null=True)
     vip = models.BooleanField(default=False)
-    org_unit = models.CharField(max_length=20)
+    org_unit = models.CharField(max_length=20, blank=True, null=True)
 
+    def __str__(self):
+        return '%s %s %s' % (self.userid, self.last_name, self.first_name)
 
 class SimProfile(models.Model):
     name = models.CharField(max_length=30)
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=200, blank=True, null=True)
 
+    def __str__(self):
+        return '%s' % (self.name)
 
 
 class Sim(models.Model):
@@ -37,35 +41,54 @@ class Sim(models.Model):
     pin = models.CharField(max_length=5)
     puk = models.CharField(max_length=11)
     profile = models.ForeignKey(SimProfile, on_delete=models.SET_NULL, null=True)
-    usage = models.CharField(max_length=1, choices=USAGE_CHOICES)
-    sim_type = models.CharField(max_length=1, choices=SIM_TYPE_CHOICES)
+    usage = models.CharField(max_length=1, choices=USAGE_CHOICES, default='P')
+    sim_type = models.CharField(max_length=1, choices=SIM_TYPE_CHOICES, default='V')
     active = models.BooleanField(default=False)
     invisible = models.BooleanField(default=False)
 
-    user = models.ForeignKey(MobileUser, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(MobileUser, on_delete=models.SET_NULL, blank=True, null=True)
+
+    def __str__(self):
+        return '%s' % (self.iccid)
 
 class MobileDeviceModel(models.Model):
     name = models.CharField(max_length=50)
-    variant = models.CharField(max_length=50)
+    variant = models.CharField(max_length=50, blank=True, null=True)
     manufacturer = models.CharField(max_length=50)
+
+    def __str__(self):
+        return '%s %s' % (self.manufacturer, self.name)
+
 
 class MobileDeviceOwner(models.Model):
     owner = models.CharField(max_length=50)
 
+    def __str__(self):
+        return '%s' % (self.owner)
+
+
 class MobileDeviceStatus(models.Model):
     status = models.CharField(max_length=50)
-    description = models.CharField(max_length=250)
+    description = models.CharField(max_length=250, blank=True, null=True)
+
+    def __str__(self):
+        return '%s' % (self.status)
+
 
 class MobileDevice(models.Model):
     imei = models.CharField(max_length=16, unique=True)
     model = models.ForeignKey(MobileDeviceModel, on_delete=models.CASCADE)
-    serial_no = models.CharField(max_length=30)
+    serial_no = models.CharField(max_length=30, blank=True, null=True)
     owner = models.ForeignKey(MobileDeviceOwner, on_delete=models.CASCADE)
-    status = models.ForeignKey(MobileDeviceStatus, on_delete=models.SET_NULL, null=True)
-    notes = models.TextField()
-    date_purchased = models.DateField()
-    installed_sim = models.ForeignKey(Sim, on_delete=models.SET_NULL, null=True)
+    status = models.ForeignKey(MobileDeviceStatus, on_delete=models.SET_NULL, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    date_purchased = models.DateField(blank=True, null=True)
+    installed_sim = models.ForeignKey(Sim, on_delete=models.SET_NULL, blank=True, null=True)
     assignment = models.ManyToManyField(MobileUser, through='MobileDeviceAssignment')
+
+    def __str__(self):
+        return '%s' % (self.imei)
+
 
 class MobileDeviceAssignment(models.Model):
     DOCS_STATUS_CHOICES = [
@@ -81,9 +104,10 @@ class MobileDeviceAssignment(models.Model):
     device = models.ForeignKey(MobileDevice, on_delete=models.CASCADE)
     user = models.ForeignKey(MobileUser, on_delete=models.CASCADE)
     date_start = models.DateField()
-    date_stop = models.DateField()
-    docs_status = models.CharField(max_length=1, choices=DOCS_STATUS_CHOICES)
-    mode = models.CharField(max_length=1, choices=MODE_CHOICES)
+    date_stop = models.DateField(blank=True, null=True)
+    docs_status = models.CharField(max_length=1, choices=DOCS_STATUS_CHOICES, default='U')
+    mode = models.CharField(max_length=1, choices=MODE_CHOICES, default='P')
 
-
+    def __str__(self):
+        return '%s %s' % (self.device, self.user)
 
